@@ -415,3 +415,61 @@ plot(precis(m5.14)) # now treatment has a much bigger effect
 #############################                                    ###############################
 ################################################################################################
 
+data("Howell1")
+d <- Howell1
+str(d)
+
+m5.15 <- map(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + bm*male,
+    a ~ dnorm(178, 100),
+    bm ~ dnorm(0, 10),
+    sigma ~ dunif(0,50)
+      ), data = d
+)
+precis(m5.15)
+plot(precis(m5.15))
+
+# a --> average height among females (assumes males = 0)
+# bm --> average difference between males and females.
+
+#### Many categories
+
+d <- milk
+unique(d$clade)
+d$clade.NWM <- ifelse(d$clade == 'New World Monkey', 1, 0)
+d$clade.OWM <- ifelse(d$clade == 'Old World Monkey', 1, 0)
+d$clade.S <- ifelse(d$clade == 'Strepsirrhine', 1, 0)
+
+# new model with dummies
+
+m5.16 <- map(
+  alist(
+    kcal.per.g ~ dnorm(mu, sigma),
+    mu <- a + b.NWM*clade.NWM + b.OWM*clade.OWM+b.S*clade.S,
+    a ~ dnorm(0.6, 10),
+    c(b.NWM, b.OWM, b.S) ~ dnorm(0,1),
+    sigma ~ dunif(0,10)
+  ), data = d
+)
+precis(m5.16)
+plot(precis(m5.16))
+
+# a = average milk energy for Apes, parameters are differences between categories and the baseline Apes.
+
+#### Other approach: Individual intercepts
+
+d$clade_id <- coerce_index(d$clade)
+
+m5.17 <- map(
+  alist(
+    kcal.per.g ~ dnorm(mu, sigma),
+    mu <- a[clade_id],
+    a[clade_id] ~ dnorm(0.6, 10),
+    sigma ~dunif(0,10)
+  ), data = d
+)
+
+precis(m5.17, depth = 2)
+plot(precis(m5.17, depth = 2))
